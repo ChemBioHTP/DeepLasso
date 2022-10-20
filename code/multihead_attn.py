@@ -181,9 +181,9 @@ if __name__ == "__main__":
 
     """Create a dataset and split it into train/dev/test."""
     dataset = list(zip(proteins, interactions))
-    dataset = shuffle_dataset(dataset, 1234)
-    dataset_train, dataset_ = split_dataset(dataset, 0.8)
-    dataset_dev, dataset_test = split_dataset(dataset_, 0.5)
+    dataset = shuffle_dataset(dataset, 42)
+    dataset_train, dataset_vt = split_dataset(dataset, 0.8)
+    dataset_valid, dataset_test = split_dataset(dataset_vt, 0.5)
 
     """Set a model."""
     torch.manual_seed(1234)
@@ -210,7 +210,7 @@ if __name__ == "__main__":
             trainer.optimizer.param_groups[0]['lr'] *= lr_decay
 
         loss_train, rmse_train, r2_train = trainer.train(dataset_train)
-        MAE_dev, RMSE_dev, R2_dev, Ydev, Preddev = tester.test(dataset_dev)
+        MAE_dev, RMSE_dev, R2_dev, Ydev, Preddev = tester.test(dataset_valid)
         MAE_test, RMSE_test, R2_test, Ytest, Predtest  = tester.test(dataset_test)
         name_dev = ['Ydev', 'Preddev']
         list_dev = []
