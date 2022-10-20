@@ -1,2 +1,2 @@
 # deeplasso
-Lasso enrichment prediction data from James
+Lasso enrichment prediction data from Jamie
