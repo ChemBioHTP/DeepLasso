@@ -172,7 +172,6 @@ if __name__ == "__main__":
         device = torch.device('cpu')
         print('The code uses CPU!!!')
 
-    """Load preprocessed data."""
     dir_input = ('./input/')
     proteins = load_tensor(dir_input + 'proteins', torch.LongTensor)
     interactions = load_tensor(dir_input + 'regression', torch.FloatTensor)
