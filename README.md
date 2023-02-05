@@ -1,5 +1,5 @@
 # DeepLasso
-##About the project
+## About the project
 The implementation of the paper "A High-Throughput Screen Reveals the structure-Activity Relationship of the Antimicrobial Lasso Peptide Ubonodin"
 
 ##Getting started 
