@@ -41,7 +41,11 @@ Notably, the preprocessing "preprocess.py" and trainer "Trainer.train" code were
 
 ## Developer of the DeepLasso code
 Xinchun (Shone) Ran
+
 Graduate Research Assistant
+
 Yang Lab
+
 Department of Chemistry
+
 Vanderbilt University
