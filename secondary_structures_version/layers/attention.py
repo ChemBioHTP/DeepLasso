@@ -2,6 +2,7 @@ import torch
 from torch.nn import functional as F
 from torch import nn, optim
 import math
+
 def scaled_dot_product(q, k, v, mask=None):
     d_k = q.size()[-1]
     attn_logits = torch.matmul(q, k.transpose(-2, -1))
@@ -11,7 +12,6 @@ def scaled_dot_product(q, k, v, mask=None):
     attention = F.softmax(attn_logits, dim=-1)
     values = torch.matmul(attention, v)
     return values, attention
-
 
 class MultiheadAttention(nn.Module):
     def __init__(self, input_dim, embed_dim, num_heads):
