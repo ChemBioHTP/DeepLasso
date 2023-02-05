@@ -1,8 +1,8 @@
 #!/usr/bin/python
-# coding: utf-8
 
-# Author: LE YUAN
-# Date: 2020-10-03
+#The data preprocss script is adopted from DLKcat, author Le Yuan
+#https://github.com/SysBioChalmers/DLKcat
+
 
 import math
 import json
@@ -21,10 +21,8 @@ mutants = list()
 
 def split_sequence(sequence, ngram):
     sequence = '-' + sequence + '='
-    # print(sequence)
     words = [word_dict[sequence[i:i+ngram]] for i in range(len(sequence)-ngram+1)]
     return np.array(words)
-    # return word_dict
 
 def split_topology(topolgy, ngram):
     topolgy = '-' + topolgy + '='
@@ -37,7 +35,7 @@ def dump_dictionary(dictionary, filename):
         pickle.dump(dict(dictionary), file)
 
 def main() :
-    with open('./test_data_1133.csv', 'r') as infile :
+    with open('./case.csv', 'r') as infile :
         enrich_data = infile.readlines()
 
     ngram = 3
@@ -47,7 +45,6 @@ def main() :
         line_item = list()
         data = line.strip().split(',')
         sequence = data[0]
-        enrich = data[1]
         ss = data[-1]
         """protein sequence embedding"""
         words = split_sequence(sequence,ngram)
@@ -57,16 +54,13 @@ def main() :
         ssts.append(ss_words)
         """regression"""
         #mutants.append(name)
-        regression.append(np.array([float(enrich)]))
-        print(float(enrich))
 
-    np.save('./test/'+'proteins', proteins)
-    np.save('./test/'+'ssts', ssts)
-    np.save('./test/' + 'regression', regression)
+    np.save('./case/'+'proteins', proteins)
+    np.save('./case/'+'ssts', ssts)
+    np.save('./case/' + 'regression', regression)
     #np.save('./input_top/' + 'mutants', mutants)
-    dump_dictionary(word_dict, './test/sequence_dict.pickle')
-    dump_dictionary(sst_dict, './test/topolgy_dict.pickle')
-
+    dump_dictionary(word_dict, './case/sequence_dict.pickle')
+    dump_dictionary(sst_dict, './case/topolgy_dict.pickle')
 
 
 if __name__ == '__main__' :

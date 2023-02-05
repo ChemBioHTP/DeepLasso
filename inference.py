@@ -2,17 +2,11 @@
 # coding: utf-8
 
 import pickle
-import sys
-import timeit
-import math
 import numpy as np
 import torch
-import torch.optim as optim
-from sklearn.metrics import mean_squared_error,r2_score
-#import scipy.stats as sps
 import pandas as pd
 from model import *
-from dataset.preprocess import *
+from data import *
 
 
 class Predictor(object):
@@ -45,7 +39,7 @@ if __name__ == "__main__":
         print('The code uses CPU!!!')
 
     """Load preprocessed data."""
-    dir_input = ('./inference/test/')
+    dir_input = ('./inference/case/')
     proteins = load_tensor(dir_input + 'proteins', torch.LongTensor)
     sst = load_tensor(dir_input + 'ssts', torch.LongTensor)
     word_dict = load_pickle(dir_input + 'sequence_dict.pickle')
@@ -55,12 +49,12 @@ if __name__ == "__main__":
     
     dataset = list(zip(proteins, sst)) #exempl the sst (proteins, sst,interaction)
     
-    model =  DeepLasso(1612,8, 20, 5, 11, 3, 1).to(device)
-    model.load_state_dict(torch.load("./params_trained/model1.pt", map_location = device))
+    model =  DeepLasso(1770,8, 20, 5, 11, 3, 1).to(device)
+    model.load_state_dict(torch.load("./params_trained/model.pt", map_location = device))
     predict_enrichment = Predictor(model)
 
     """Start predicting."""
-    with open("./inference/test_data_1133_seq_only.csv", 'r') as infiles:
+    with open("./inference/case.csv", 'r') as infiles:
         lines = infiles.readlines()
         i=0
         for line in lines[1:] :
