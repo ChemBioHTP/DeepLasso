@@ -1,55 +1,47 @@
 # DeepLasso
 ## About the project
-The implementation of the paper "A High-Throughput Screen Reveals the structure-Activity Relationship of the Antimicrobial Lasso Peptide Ubonodin"
+In collaboration with the Link lab at Princeton, we developed a deep learning model to predict  antimicrobial activity from the sequence of lasso peptide ubonodin. Please cite: "A High-Throughput Screen Reveals the structure-Activity Relationship of the Antimicrobial Lasso Peptide Ubonodin". 
 
-##Getting started 
+## Getting started 
 ### Prerequistites
 Install [Pytorch =1.8.1], [scikit-learn=1.2.], [numpy], [pandas]
 
 ## Dataset
 
-The dataset for training process is under the folder input_31th which curated from the large enrichment datasets. In the dataset folder,  it cotains multiple files
+The dataset for training is under the folder /input_31th. The dataset cotains:
 
-- mutants: The mutation flag from the original data
-- proteins: The lasso sequence use in the embedding
-- sequence_dict: The sequence dictionary use in the lasso sequence embedding
-- regression: The experimental values of lasso enrichment 
+- mutants: The mutation annotation of the original data
+- proteins: The lasso peptide sequences used in the embedding
+- sequence_dict: The sequence dictionary used in the lasso peptide sequence embedding
+- regression: The experimentally measured enrichment values for ubonodin 
 - ssts: The secondary topology labels used in topology embedding
-- topology_dict: The seconday dictionary use in the lasso topology embedding
+- topology_dict: The secondary dictionary use in the lasso peptide topology embedding
 
-## Descriptions of folders and files in the deeplasso
+## Descriptions of folders and files in DeepLasso
 
-* **inference** folder contains the inference example with raw data file and the preprocess scripts.
-* **layers** folder contains the multi-head attention layers use in the deeplasso model
-* **output** folder contains the training log and the output of test set in the training epoch
-* **params_trained** folder contains the pretrained params which can be used by the inference.py
-* **secondary_structures_version** folder contains the model architectures embedding the secondary topology of the lassp peptide (ring, loop, tail)
+* **inference** contains the inference example with raw data files and the data-preprocessing scripts.
+* **layers** contains the multi-head attention layers used in the model
+* **output** contains the training log files and the output of test set files in each training epoch
+* **params_trained** contains the pre-trained parameters that can be used by the inference.py
+* **secondary_structures_version** contains the model architectures embedding the secondary topology of ubonodin (ring, loop, tail)
 
+## Step-by-step operation:
 
-## Step-by-step running:
+## Training
+- First, run `cd deeplasso`, to get inside the folder, and run `python preprocess.py` to convert the data into word embedding.
 
-## Training for provided data
-- First, cd deeplasso, to get in the folder. 
-  `python preprocess.py`
-  Running preprocess script convert the data into word embedding
+- Second, run `python train.py`. This will display training and testing results on the screen. You can also find your training and testing log file under the /output folder.
 
-- Second, run train.py using
-  `python train.py`
-   Both training and testing result for the dataset provide will display on the screen. And you can find your training and testing log under the output
-- If you want to setup your own hyperparameters, go to the train.main() to set the hyperparams
+- If you want to set up hyperparameters for your model, go to the train.main() to set the hyperparams
 
 ## Running the inference
-   `python inference.py > inference.output`
+   Run `python inference.py > inference.output`
 
-The preprocessing "preprocess.py" and trainer "Trainer.train" code are obtained from DLKcat 
+Notably, the preprocessing "preprocess.py" and trainer "Trainer.train" code were modified from DLKcat (https://github.com/SysBioChalmers/DLKcat). Please cite: Li, F., Yuan, L., Lu, H. et al. Deep learning-based kcat prediction enables improved enzyme-constrained model reconstruction. Nat Catal 5, 662–672 (2022). https://doi.org/10.1038/s41929-022-00798-z
 
-@article{li2022deep,
-  title={Deep learning-based k cat prediction enables improved enzyme-constrained model reconstruction},
-    author={Li, Feiran and Yuan, Le and Lu, Hongzhong and Li, Gang and Chen, Yu and Engqvist, Martin KM and Kerkhoven, Eduard J and Nielsen, Jens},
-    journal={Nature Catalysis},
-    volume={5},
-    number={8},
-    pages={662--672},
-    year={2022},
-    publisher={Nature Publishing Group UK London}
-}
+## Developer of the DeepLasso code
+Xinchun (Shone) Ran
+Graduate Research Assistant
+Yang Lab
+Department of Chemistry
+Vanderbilt University
