@@ -9,7 +9,6 @@ import numpy as np
 import torch
 import torch.optim as optim
 from sklearn.metrics import mean_squared_error,r2_score
-#import scipy.stats as sps
 import pandas as pd
 from model import * 
 
@@ -31,15 +30,10 @@ class Trainer(object):
             loss.backward()
             self.optimizer.step()
             loss_total += loss.to('cpu').data.numpy()
-            #correct_values = math.log10(math.pow(2,correct_values))
-            #predicted_values = math.log10(math.pow(2,predicted_values))
             trainCorrect.append(correct_values)
             trainPredict.append(predicted_values)
         rmse_train = np.sqrt(mean_squared_error(trainCorrect,trainPredict))
         r2_train = r2_score(trainCorrect,trainPredict)
-        print(type(trainCorrect),type(trainPredict),len(trainCorrect), len(trainPredict))
-        #spearman_r = sps.spearmanr(trainCorrect, trainPredict)
-        #pearson_r = sps.pearsonr(trainCorrect, trainPredict)
         return loss_total, rmse_train, r2_train
 
 
@@ -53,12 +47,9 @@ class Tester(object):
         testY, testPredict = [], []
         for data in dataset :
             (correct_values, predicted_values) = self.model(data, train=False)
-            #correct_values = math.log10(math.pow(2,correct_values))
-            #predicted_values = math.log10(math.pow(2,predicted_values))
             SAE += np.abs(predicted_values-correct_values)
-            # SAE += sum(np.abs(predicted_values-correct_values))
-            testY.append(correct_values)
-            testPredict.append(predicted_values)
+            testY.append(float(correct_values))
+            testPredict.append(float(predicted_values))
         MAE = SAE / N  # mean absolute error.
         rmse = np.sqrt(mean_squared_error(testY,testPredict))
         r2 = r2_score(testY,testPredict)
@@ -86,7 +77,7 @@ def shuffle_dataset(dataset, seed):
 
 def save_csv(name:list, content:list, setting:str):
     tmp_df = pd.DataFrame(columns=name, data=content)
-    tmp_df.to_csv(f'./output/{setting}_data.csv', encoding='gbk')
+    tmp_df.to_csv(f'./output/{setting}_data.csv', encoding='gbk',index=False)
 
 def split_dataset(dataset, ratio):
     n = int(ratio * len(dataset))
@@ -136,7 +127,6 @@ if __name__ == "__main__":
     
     torch.manual_seed(42)
     model = DeepLasso(n_word,n_top, dim, side, window, layer_cnn, layer_output).to(device)
-    #model = torch.nn.DataParallel(model)
     trainer = Trainer(model,lr, weight_decay )
     tester = Tester(model)
 
@@ -158,23 +148,23 @@ if __name__ == "__main__":
             trainer.optimizer.param_groups[0]['lr'] *= lr_decay
 
         loss_train, rmse_train, r2_train = trainer.train(dataset_train)
-        MAE_dev, RMSE_dev, R2_dev, Ydev, Preddev = tester.test(dataset_dev)
-        MAE_test, RMSE_test, R2_test, Ytest, Predtest  = tester.test(dataset_test)
-        name_dev = ['Ydev', 'Preddev']
-        list_dev = []
-        for i in zip(Ydev, Preddev):
-            list_dev.append(i)
-        name_test = ['Ytest', 'Predtest']
+        MAE_val, RMSE_val, R2_val, Yval, Y_pred_val = tester.test(dataset_dev)
+        MAE_test, RMSE_test, R2_test, Ytest, Y_pred_test  = tester.test(dataset_test)
+        name_val = ['Yval', 'Y_pred_val']
+        list_val = []
+        for i in zip(Yval, Y_pred_val):
+            list_val.append(i)
+        name_test = ['Ytest', 'Y_pred_test']
         list_test = []
-        for a in zip(Ytest, Predtest):
+        for a in zip(Ytest, Y_pred_test):
             list_test.append(a)
-        save_csv(name_dev, list_dev, 'valid_ss_iteration_50'+setting)
+        save_csv(name_val, list_val, 'valid_ss_iteration_50'+setting)
         save_csv(name_test, list_test, 'test_ss_iteration_50'+setting)
 
         end = timeit.default_timer()
         time = end - start
 
-        MAEs = [epoch, time, rmse_train, r2_train, MAE_dev, MAE_test, RMSE_dev, RMSE_test, R2_dev, R2_test]
+        MAEs = [epoch, time, rmse_train, r2_train, MAE_val, MAE_test, RMSE_val, RMSE_test, R2_val, R2_test]
         tester.save_MAEs(MAEs, file_MAEs)
         tester.save_model(model, file_model)
 

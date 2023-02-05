@@ -1,8 +1,5 @@
 #!/usr/bin/python
 # coding: utf-8
-import sys
-import timeit
-import math
 import numpy as np
 import torch
 from layers.attention import MultiheadAttention
@@ -104,7 +101,7 @@ class DeepLasso(nn.Module):
         protein_vector = self.sequence_encoder(word_vectors, self.layer_cnn)
         cat_vector = protein_vector #exemple structures
         """Topology encoder with CNN"""
-        #tops_vectors = self.embed_top(tops)
+        #tops_vectors = self.embed_top(tops) #under different dataset this will cause unstable
         #struc_vectors = self.top_encoder(tops_vectors)
         
 

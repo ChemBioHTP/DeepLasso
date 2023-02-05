@@ -24,22 +24,17 @@ class Trainer(object):
         np.random.shuffle(dataset)
         N = len(dataset)
         loss_total = 0
-        trainCorrect, trainPredict = [], []
+        y, y_predict = [], []
         for data in dataset:
             loss, correct_values, predicted_values = self.model(data)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
             loss_total += loss.to('cpu').data.numpy()
-            #correct_values = math.log10(math.pow(2,correct_values))
-            #predicted_values = math.log10(math.pow(2,predicted_values))
-            trainCorrect.append(correct_values)
-            trainPredict.append(predicted_values)
-        rmse_train = np.sqrt(mean_squared_error(trainCorrect,trainPredict))
-        r2_train = r2_score(trainCorrect,trainPredict)
-        print(type(trainCorrect),type(trainPredict),len(trainCorrect), len(trainPredict))
-        #spearman_r = sps.spearmanr(trainCorrect, trainPredict)
-        #pearson_r = sps.pearsonr(trainCorrect, trainPredict)
+            y.append(correct_values)
+            y_predict.append(predicted_values)
+        rmse_train = np.sqrt(mean_squared_error(y,y_predict))
+        r2_train = r2_score(y,y_predict)
         return loss_total, rmse_train, r2_train
 
 
@@ -50,19 +45,16 @@ class Tester(object):
     def test(self, dataset):
         N = len(dataset)
         SAE = 0  # sum absolute error.
-        testY, testPredict = [], []
+        y, y_predict = [], []
         for data in dataset :
             (correct_values, predicted_values) = self.model(data, train=False)
-            #correct_values = math.log10(math.pow(2,correct_values))
-            #predicted_values = math.log10(math.pow(2,predicted_values))
             SAE += np.abs(predicted_values-correct_values)
-            # SAE += sum(np.abs(predicted_values-correct_values))
-            testY.append(correct_values)
-            testPredict.append(predicted_values)
+            y.append(correct_values)
+            y_predict.append(predicted_values)
         MAE = SAE / N  # mean absolute error.
-        rmse = np.sqrt(mean_squared_error(testY,testPredict))
-        r2 = r2_score(testY,testPredict)
-        return MAE, rmse, r2, testY, testPredict
+        rmse = np.sqrt(mean_squared_error(y,y_predict))
+        r2 = r2_score(y,y_predict)
+        return MAE, rmse, r2, y, y_predict
 
     def save_MAEs(self, MAEs, filename):
         with open(filename, 'a') as f:
@@ -102,14 +94,13 @@ if __name__ == "__main__":
     side=5
     window=11
     layer_cnn=3
-    layer_output=1
+    layer_output=2
     lr=1e-3
     lr_decay = 0.5
     decay_interval=10
     weight_decay=1e-5
-    iteration=50
-    setting ='train_preprocess_dim_20_ss_top_model_31th_iteration_50'
-    # print(type(radius))
+    iteration=15
+    setting ='train_preprocess_dim_20_ss_top_model_31th_layer_2_iteration_15_2'
 
     """CPU or GPU."""
     if torch.cuda.is_available():
@@ -123,26 +114,26 @@ if __name__ == "__main__":
     dir_input = ('./input_31th/')
     proteins = load_tensor(dir_input + 'proteins', torch.LongTensor)
     sst = load_tensor(dir_input + 'ssts', torch.LongTensor)
-    interactions = load_tensor(dir_input + 'regression', torch.FloatTensor)
+    enrichments = load_tensor(dir_input + 'regression', torch.FloatTensor)
     word_dict = load_pickle(dir_input + 'sequence_dict.pickle')
     sst_dict = load_pickle(dir_input + 'topolgy_dict.pickle')
     n_word = len(word_dict)
     n_top = len(sst_dict)
     
-    dataset = list(zip(proteins, sst, interactions)) #exempl the sst (proteins, sst,interaction)
-    dataset = shuffle_dataset(dataset, 42)
+    dataset = list(zip(proteins, sst, enrichments)) #exempl the sst (proteins, sst,enrichments)
+    dataset = shuffle_dataset(dataset, 1234)
     dataset_train, dataset_tmp = split_dataset(dataset, 0.8)
     dataset_dev, dataset_test = split_dataset(dataset_tmp, 0.5) 
     
-    torch.manual_seed(42)
+    torch.manual_seed(1234)
     model = DeepLasso(n_word,n_top, dim, side, window, layer_cnn, layer_output).to(device)
     #model = torch.nn.DataParallel(model)
     trainer = Trainer(model,lr, weight_decay )
     tester = Tester(model)
 
     """Output files."""
-    file_MAEs = './output/MAEs--' + setting + '.txt'
-    file_model = './output/' + setting + '.pt'
+    file_MAEs = './predicted/MAEs--' + setting + '.csv'
+    file_model = './predicted/' + setting + '.pt'
     MAEs = ('Epoch\tTime(sec)\tRMSE_train\tR2_train\tMAE_dev\tMAE_test\tRMSE_dev\tRMSE_test\tR2_dev\tR2_test')
     with open(file_MAEs, 'w') as f:
         f.write(MAEs + '\n')
