@@ -1,85 +1,24 @@
 #!/usr/bin/python
 # coding: utf-8
 
-
 import pickle
 import sys
 import timeit
 import math
 import numpy as np
 import torch
-from nn.attention import MultiheadAttention
-import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 from sklearn.metrics import mean_squared_error,r2_score
 #import scipy.stats as sps
 import pandas as pd
-
-def bn_conv2d(in_planes, out_planes, kernel_size, dilated):
-    return nn.Sequential(nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, dilation=dilated,padding=(dilated * (kernel_size -1)+1)//2), nn.BatchNorm2d(out_planes), nn.ReLU())
-
-class deeplasso(nn.Module):
-    def __init__(self):
-        super(deeplasso, self).__init__()
-        self.embed_word = nn.Embedding(n_word, dim)
-        self.W_cnn = nn.ModuleList([bn_conv2d(in_planes=1, out_planes=1, kernel_size=2*window+1, dilated=1) for _ in range(layer_cnn)])
-        #self.W_attention = nn.Linear(dim, dim)
-        self.W_attention = MultiheadAttention(dim,dim,num_heads=5)
-        self.W_out = nn.ModuleList([nn.Linear(dim, dim) for _ in range(layer_output)])
-        # self.W_interaction = nn.Linear(2*dim, 2)
-        self.W_linear = nn.Linear(dim, 1)
-    
-    def attention_cnn(self, xs, layer):
-        xs = torch.unsqueeze(torch.unsqueeze(xs, 0), 0)
-        residuals = xs
-        for i in range(layer):
-            xs = residuals + self.W_cnn[i](xs)
-        xs = torch.squeeze(torch.squeeze(xs, 0), 0)
-        #h = torch.relu(self.W_attention(x))
-        hs = torch.relu(self.W_attention(xs))
-        #weights = torch.tanh(F.linear(h, hs))
-        #print(weights.shape, hs.shape)
-        #ys = torch.t(weights) * hs
-
-        # return torch.unsqueeze(torch.sum(ys, 0), 0)
-        return torch.unsqueeze(torch.mean(hs, 0), 0)
-
-    def forward(self, inputs):
-
-        words = inputs
-
-        word_vectors = self.embed_word(words)
-        protein_vector = self.attention_cnn(word_vectors, layer_cnn)
-
-        for j in range(layer_output):
-            output_vector = torch.relu(self.W_out[j](protein_vector))
-        output = self.W_linear(output_vector)
-
-        return output
-
-    def __call__(self, data, train=True):
-
-        inputs, correct_enrichment = data[0], data[-1]
-        predicted_enrichment = self.forward(inputs)
-        # print(predicted_interaction)
-
-        if train:
-            loss = F.mse_loss(predicted_enrichment, correct_enrichment)
-            correct_values = correct_enrichment.to('cpu').data.numpy()
-            predicted_values = predicted_enrichment.to('cpu').data.numpy()[0]
-            return loss, correct_values, predicted_values
-        else:
-            correct_values = correct_enrichment.to('cpu').data.numpy()
-            predicted_values = predicted_enrichment.to('cpu').data.numpy()[0]
-            return correct_values, predicted_values
-
+from model import * 
 
 class Trainer(object):
-    def __init__(self, model):
+    def __init__(self, model, lr,weight_decay):
         self.model = model
-        self.optimizer = optim.Adam(self.model.parameters(),
-                                    lr=lr, weight_decay=weight_decay)
+        self.lr = lr
+        self.weight_decay = weight_decay
+        self.optimizer = optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
 
     def train(self, dataset):
         np.random.shuffle(dataset)
@@ -92,10 +31,15 @@ class Trainer(object):
             loss.backward()
             self.optimizer.step()
             loss_total += loss.to('cpu').data.numpy()
+            #correct_values = math.log10(math.pow(2,correct_values))
+            #predicted_values = math.log10(math.pow(2,predicted_values))
             trainCorrect.append(correct_values)
             trainPredict.append(predicted_values)
         rmse_train = np.sqrt(mean_squared_error(trainCorrect,trainPredict))
         r2_train = r2_score(trainCorrect,trainPredict)
+        print(type(trainCorrect),type(trainPredict),len(trainCorrect), len(trainPredict))
+        #spearman_r = sps.spearmanr(trainCorrect, trainPredict)
+        #pearson_r = sps.pearsonr(trainCorrect, trainPredict)
         return loss_total, rmse_train, r2_train
 
 
@@ -109,7 +53,10 @@ class Tester(object):
         testY, testPredict = [], []
         for data in dataset :
             (correct_values, predicted_values) = self.model(data, train=False)
+            #correct_values = math.log10(math.pow(2,correct_values))
+            #predicted_values = math.log10(math.pow(2,predicted_values))
             SAE += np.abs(predicted_values-correct_values)
+            # SAE += sum(np.abs(predicted_values-correct_values))
             testY.append(correct_values)
             testPredict.append(predicted_values)
         MAE = SAE / N  # mean absolute error.
@@ -137,9 +84,9 @@ def shuffle_dataset(dataset, seed):
     np.random.shuffle(dataset)
     return dataset
 
-def save_csv(name:list, content:list, setting):
+def save_csv(name:list, content:list, setting:str):
     tmp_df = pd.DataFrame(columns=name, data=content)
-    tmp_df.to_csv(r'./output/{setting}_data.csv', encoding='gbk')
+    tmp_df.to_csv(f'./output/{setting}_data.csv', encoding='gbk')
 
 def split_dataset(dataset, ratio):
     n = int(ratio * len(dataset))
@@ -150,18 +97,18 @@ def split_dataset(dataset, ratio):
 if __name__ == "__main__":
 
     """Hyperparameters."""
-    ngram=21
-    dim=10
+    ngram=3
+    dim=20
     side=5
     window=11
-    layer_cnn=6
-    layer_output=6
+    layer_cnn=3
+    layer_output=1
     lr=1e-3
     lr_decay = 0.5
     decay_interval=10
-    weight_decay=1e-6
-    iteration=200
-    setting = 'train_preprocess_ngrams_3_ngram_21Multiheads_attention_denovo_10330'
+    weight_decay=1e-5
+    iteration=50
+    setting ='train_preprocess_dim_20_model_31th_iteration_50'
     # print(type(radius))
 
     """CPU or GPU."""
@@ -173,29 +120,30 @@ if __name__ == "__main__":
         print('The code uses CPU!!!')
 
     """Load preprocessed data."""
-    dir_input = ('./input/')
+    dir_input = ('./input_31th/')
     proteins = load_tensor(dir_input + 'proteins', torch.LongTensor)
+    sst = load_tensor(dir_input + 'ssts', torch.LongTensor)
     interactions = load_tensor(dir_input + 'regression', torch.FloatTensor)
     word_dict = load_pickle(dir_input + 'sequence_dict.pickle')
+    sst_dict = load_pickle(dir_input + 'topolgy_dict.pickle')
     n_word = len(word_dict)
-
-    """Create a dataset and split it into train/dev/test."""
-    dataset = list(zip(proteins, interactions))
+    n_top = len(sst_dict)
+    
+    dataset = list(zip(proteins, sst, interactions)) #exempl the sst (proteins, sst,interaction)
     dataset = shuffle_dataset(dataset, 42)
-    dataset_train, dataset_vt = split_dataset(dataset, 0.8)
-    dataset_valid, dataset_test = split_dataset(dataset_vt, 0.5)
-
-    """Set a model."""
-    torch.manual_seed(1234)
-    model = deeplasso().to(device)
+    dataset_train, dataset_tmp = split_dataset(dataset, 0.8)
+    dataset_dev, dataset_test = split_dataset(dataset_tmp, 0.5) 
+    
+    torch.manual_seed(42)
+    model = DeepLasso(n_word,n_top, dim, side, window, layer_cnn, layer_output).to(device)
     #model = torch.nn.DataParallel(model)
-    trainer = Trainer(model)
+    trainer = Trainer(model,lr, weight_decay )
     tester = Tester(model)
 
     """Output files."""
     file_MAEs = './output/MAEs--' + setting + '.txt'
-    file_model = './output/' + setting
-    MAEs = ('Epoch\tTime(sec)\tRMSE_train\tR2_train\tSpearman_R_train\tPearson_R_train\tMAE_dev\tMAE_test\tRMSE_dev\tRMSE_test\tR2_dev\tR2_test\tSpearman_R_dev\tSpearman_R_test')
+    file_model = './output/' + setting + '.pt'
+    MAEs = ('Epoch\tTime(sec)\tRMSE_train\tR2_train\tMAE_dev\tMAE_test\tRMSE_dev\tRMSE_test\tR2_dev\tR2_test')
     with open(file_MAEs, 'w') as f:
         f.write(MAEs + '\n')
 
@@ -210,7 +158,7 @@ if __name__ == "__main__":
             trainer.optimizer.param_groups[0]['lr'] *= lr_decay
 
         loss_train, rmse_train, r2_train = trainer.train(dataset_train)
-        MAE_dev, RMSE_dev, R2_dev, Ydev, Preddev = tester.test(dataset_valid)
+        MAE_dev, RMSE_dev, R2_dev, Ydev, Preddev = tester.test(dataset_dev)
         MAE_test, RMSE_test, R2_test, Ytest, Predtest  = tester.test(dataset_test)
         name_dev = ['Ydev', 'Preddev']
         list_dev = []
@@ -220,8 +168,8 @@ if __name__ == "__main__":
         list_test = []
         for a in zip(Ytest, Predtest):
             list_test.append(a)
-        save_csv(name_dev, list_dev, 'dev')
-        save_csv(name_test, list_test, 'test')
+        save_csv(name_dev, list_dev, 'valid_ss_iteration_50'+setting)
+        save_csv(name_test, list_test, 'test_ss_iteration_50'+setting)
 
         end = timeit.default_timer()
         time = end - start
