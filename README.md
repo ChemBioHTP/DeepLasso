@@ -1,8 +1,8 @@
 # DeepLasso
-##About the project
+## About the project
 The implementation of the paper "A High-Throughput Screen Reveals the structure-Activity Relationship of the Antimicrobial Lasso Peptide Ubonodin"
 
-##Getting started 
+## Getting started 
 ### Prerequistites
 Install [Pytorch =1.8.1], [scikit-learn=1.2.], [numpy], [pandas]
 
@@ -30,11 +30,15 @@ The dataset for training process is under the folder input_31th which curated fr
 
 ## Training for provided data
 - First, cd deeplasso, to get in the folder. 
-  `python preprocess.py`
+  ```python 
+    preprocess.py`
+  ```
   Running preprocess script convert the data into word embedding
 
 - Second, run train.py using
-  `python train.py`
+  ```python
+      python train.py
+  ```
    Both training and testing result for the dataset provide will display on the screen. And you can find your training and testing log under the output
 - If you want to setup your own hyperparameters, go to the train.main() to set the hyperparams
 
@@ -43,6 +47,7 @@ The dataset for training process is under the folder input_31th which curated fr
 
 The preprocessing "preprocess.py" and trainer "Trainer.train" code are obtained from DLKcat 
 
+```bibtex
 @article{li2022deep,
   title={Deep learning-based k cat prediction enables improved enzyme-constrained model reconstruction},
     author={Li, Feiran and Yuan, Le and Lu, Hongzhong and Li, Gang and Chen, Yu and Engqvist, Martin KM and Kerkhoven, Eduard J and Nielsen, Jens},
@@ -53,3 +58,4 @@ The preprocessing "preprocess.py" and trainer "Trainer.train" code are obtained 
     year={2022},
     publisher={Nature Publishing Group UK London}
 }
+```
