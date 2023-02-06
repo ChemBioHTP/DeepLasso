@@ -31,7 +31,7 @@ The dataset for training process is under the folder input_31th which curated fr
 ## Training for provided data
 - First, cd deeplasso, to get in the folder. 
   ```python 
-    preprocess.py`
+    preprocess.py
   ```
   Running preprocess script convert the data into word embedding
 
@@ -43,8 +43,9 @@ The dataset for training process is under the folder input_31th which curated fr
 - If you want to setup your own hyperparameters, go to the train.main() to set the hyperparams
 
 ## Running the inference
-   `python inference.py > inference.output`
-
+   ```python 
+      inference.py > inference.output
+   ```
 The preprocessing "preprocess.py" and trainer "Trainer.train" code are obtained from DLKcat 
 
 ```bibtex
